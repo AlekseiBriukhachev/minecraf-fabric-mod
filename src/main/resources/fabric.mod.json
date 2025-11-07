@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "messagemod",
+	"version": "${version}",
+	"name": "Message Mod",
+	"description": "A mod that sends messages to PostgreSQL database",
+	"authors": [
+		"Aleksei"
+	],
+	"contact": {
+		"sources": "https://github.com/AlekseiBriukhachev/minecraf-fabric-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/messagemod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.fabric.messagemod.MessageMod"
+		],
+		"client": [
+			"com.fabric.messagemod.client.MessageModClient"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

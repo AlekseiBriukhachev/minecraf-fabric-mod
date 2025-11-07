@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option java_package = "com.com.fabric.messagemod.network.proto";
+option java_outer_classname = "MessageProto";
+
+message Message {
+  string text = 1;
+}
