@@ -92,16 +92,6 @@ public class MessageScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Send on Enter key
-        if (keyCode == 257 && !textField.getValue().trim().isEmpty()) { // 257 = ENTER
-            onSendButtonPressed();
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
     public boolean isPauseScreen() {
         return false;
     }

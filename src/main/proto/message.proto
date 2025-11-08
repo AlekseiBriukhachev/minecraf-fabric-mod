@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "com.com.fabric.messagemod.network.proto";
+option java_package = "com.fabric.messagemod.network.proto";
 option java_outer_classname = "MessageProto";
 
 message Message {

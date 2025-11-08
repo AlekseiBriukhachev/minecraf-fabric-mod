@@ -1,7 +1,8 @@
 package com.fabric.messagemod.network;
 
 import com.fabric.messagemod.database.DatabaseManager;
-import com.fabric.messagemod.network.proto.;
+import com.fabric.messagemod.network.proto.MessageProto;
+import com.google.protobuf.InvalidProtocolBufferException;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;

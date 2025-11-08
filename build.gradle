@@ -1,7 +1,7 @@
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
-	id 'com.google.protobuf' version '0.9.4'
+	id 'com.google.protobuf' version "${protobuf_version}"
 }
 
 version = project.mod_version
@@ -15,16 +15,8 @@ repositories {
 	mavenCentral()
 }
 
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"modid" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-proc:none'
 }
 
 dependencies {
@@ -32,6 +24,9 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// Protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.25.5'
 
 	// Hibernate & JPA
 	implementation 'org.hibernate.orm:hibernate-core:6.4.4.Final'
@@ -43,36 +38,11 @@ dependencies {
 
 	// HikariCP connection pool
 	implementation 'com.zaxxer:HikariCP:5.1.0'
-
-	// Logging
-	implementation 'org.slf4j:slf4j-api:2.0.12'
-
-	// Lombok
-	compileOnly 'org.projectlombok:lombok:1.18.20'
-	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 }
 
 protobuf {
 	protoc {
 		artifact = 'com.google.protobuf:protoc:3.25.5'
-	}
-
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				java {
-					option 'lite'
-				}
-			}
-		}
-	}
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
 	}
 }
 
@@ -82,25 +52,46 @@ sourceSets {
 			srcDir 'src/main/proto'
 		}
 		java {
-			srcDirs 'src/main/java', 'build/generated/source/proto/main/java'
+			srcDirs += 'build/generated/source/proto/main/java'
 		}
 	}
 }
 
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+
+	exclude '**/*.proto'
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
+	it.options.encoding = 'UTF-8'
 }
 
 java {
 	withSourcesJar()
+
+//	toolchain {
+//		languageVersion = JavaLanguageVersion.of(21)
+//		vendor = JvmVendorSpec.ADOPTIUM
+//	}
+
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
-	inputs.property "archivesName", project.base.archivesName
-
 	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
+		rename { "${it}_${project.base.archivesName.get()}"}
 	}
+}
+
+tasks.named('compileJava') {
+	dependsOn 'generateProto'
 }
