@@ -3,6 +3,7 @@ package com.fabric.messagemod.database;
 import com.fabric.messagemod.database.entity.MessageEntity;
 import com.fabric.messagemod.database.repository.MessageRepository;
 import jakarta.persistence.EntityManagerFactory;
+import org.flywaydb.core.Flyway;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,34 +31,36 @@ public class DatabaseManager {
 
     public void initialize(Path configDir) {
         try {
-            Properties dbProperties = loadDatabaseConfig(configDir);
+            Properties props = loadDatabaseConfig(configDir);
 
-            Configuration configuration = new Configuration();
-            configuration.addAnnotatedClass(MessageEntity.class);
+            String url = props.getProperty("db.url", "jdbc:postgresql://localhost:5432/minecraft");
+            String user = props.getProperty("db.username", "postgres");
+            String pass = props.getProperty("db.password", "password");
 
-            // Database connection settings
-            configuration.setProperty("hibernate.connection.driver_class", "org.postgresql.Driver");
-            configuration.setProperty("hibernate.connection.url",
-                    dbProperties.getProperty("db.url", "jdbc:postgresql://localhost:5432/minecraft"));
-            configuration.setProperty("hibernate.connection.username",
-                    dbProperties.getProperty("db.username", "postgres"));
-            configuration.setProperty("hibernate.connection.password",
-                    dbProperties.getProperty("db.password", "password"));
+            // Run Flyway migrations
+            Flyway.configure()
+                    .dataSource(url, user, pass)
+                    .locations("classpath:db/migration")
+                    .load()
+                    .migrate();
 
-            // HikariCP connection pool settings
-            configuration.setProperty("hibernate.connection.provider_class",
-                    "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
-            configuration.setProperty("hibernate.hikari.minimumIdle", "5");
-            configuration.setProperty("hibernate.hikari.maximumPoolSize", "10");
-            configuration.setProperty("hibernate.hikari.idleTimeout", "30000");
+            // Hibernate configuration
+            Configuration cfg = new Configuration()
+                    .addAnnotatedClass(MessageEntity.class)
+                    .setProperty("hibernate.connection.driver_class", "org.postgresql.Driver")
+                    .setProperty("hibernate.connection.url", url)
+                    .setProperty("hibernate.connection.username", user)
+                    .setProperty("hibernate.connection.password", pass)
+                    .setProperty("hibernate.connection.provider_class", "org.hibernate.hikaricp.internal.HikariCPConnectionProvider")
+                    .setProperty("hibernate.hikari.minimumIdle", "5")
+                    .setProperty("hibernate.hikari.maximumPoolSize", "10")
+                    .setProperty("hibernate.hikari.idleTimeout", "30000")
+                    .setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+                    .setProperty("hibernate.hbm2ddl.auto", "validate")
+                    .setProperty("hibernate.show_sql", "false")
+                    .setProperty("hibernate.format_sql", "true");
 
-            // Hibernate settings
-            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-            configuration.setProperty("hibernate.hbm2ddl.auto", "update");
-            configuration.setProperty("hibernate.show_sql", "false");
-            configuration.setProperty("hibernate.format_sql", "true");
-
-            emf = configuration.buildSessionFactory();
+            emf = cfg.buildSessionFactory();
             messageRepository = new MessageRepository(emf);
 
             LOGGER.info("Database initialized successfully");

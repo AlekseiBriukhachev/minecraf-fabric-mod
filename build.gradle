@@ -15,10 +15,6 @@ repositories {
 	mavenCentral()
 }
 
-tasks.withType(JavaCompile).configureEach {
-	options.compilerArgs << '-proc:none'
-}
-
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
@@ -38,6 +34,10 @@ dependencies {
 
 	// HikariCP connection pool
 	implementation 'com.zaxxer:HikariCP:5.1.0'
+
+	// Flyway for migration
+	implementation 'org.flywaydb:flyway-core:10.4.1'
+	implementation 'org.flywaydb:flyway-database-postgresql:10.4.1'
 }
 
 protobuf {
@@ -72,15 +72,17 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
 	it.options.encoding = 'UTF-8'
+
+	// Отключаем annotation processing который вызывает ошибку
+	it.options.compilerArgs.add('-proc:none')
 }
 
 java {
 	withSourcesJar()
 
-//	toolchain {
-//		languageVersion = JavaLanguageVersion.of(21)
-//		vendor = JvmVendorSpec.ADOPTIUM
-//	}
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
@@ -94,4 +96,9 @@ jar {
 
 tasks.named('compileJava') {
 	dependsOn 'generateProto'
+}
+
+tasks.named('sourcesJar') {
+	dependsOn 'generateProto'
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
