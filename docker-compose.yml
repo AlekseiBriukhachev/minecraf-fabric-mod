@@ -1,13 +1,13 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: minecraft-postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: minecraft
-      POSTGRES_USER: mcuser
-      POSTGRES_PASSWORD: mcpassword
+      POSTGRES_DB: ${POSTGRES_DB:-minecraft}
+      POSTGRES_USER: ${POSTGRES_USER:-mcuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mcpassword}
     ports:
       - "5432:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
       - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mcuser -d minecraft"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mcuser} -d ${POSTGRES_DB:-minecraft}"]
       interval: 10s
       timeout: 5s
       retries: 5

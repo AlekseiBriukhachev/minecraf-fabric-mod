@@ -1,172 +1,141 @@
-# 🚀 Пошаговая инструкция запуска проекта
+# 🚀 Message Mod
 
-## Шаг 1: Клонировать репозиторий
+Message Mod is a Fabric mod for Minecraft that lets players send messages to a PostgreSQL database.
+
+This project is built for people who want to use the mod, not for developers working on it. In normal use, you only need to run a few commands and start the game.
+
+## What the mod does
+
+When you press `M` in-game, your message is sent to the server and stored in PostgreSQL.
+
+## Requirements
+
+Before you start, make sure you have:
+- Java 21+
+- Docker Desktop or Docker Engine with Compose
+- Git
+
+## Quick start
+
+### 1) Download the project
 
 ```bash
 git clone https://github.com/AlekseiBriukhachev/minecraf-fabric-mod.git
+cd minecraf-fabric-mod
 ```
 
-## Шаг 2: Инициализация Gradle Wrapper
+### 2) Create your local database config
+
+Create a file named `.env` in the project root with your own local values.
+
+Example:
+
+```env
+POSTGRES_DB=minecraft
+POSTGRES_USER=mcuser
+POSTGRES_PASSWORD=changeme
+DB_URL=jdbc:postgresql://localhost:5432/minecraft
+DB_USERNAME=mcuser
+DB_PASSWORD=changeme
+```
+
+Important:
+- use your own local values
+- do not commit this file
+- never share real credentials in a public repository
+- the file is only for local testing
+
+### 3) Start the database
 
 ```bash
-# Если у вас НЕТ установленного Gradle
-# Скачайте gradle-wrapper.jar вручную и положите в gradle/wrapper/
-
-# Если у вас ЕСТЬ Gradle (любая версия)
-gradle wrapper --gradle-version 8.14
+docker compose up -d
 ```
 
-Или скачайте wrapper вручную:
+### 4) Accept the Minecraft EULA
+
+Open `run/eula.txt` and change:
+
+```txt
+eula=false
+```
+
+to:
+
+```txt
+eula=true
+```
+
+### 5) Start the mod
+
+Run the server:
 
 ```bash
-cd gradle/wrapper
-wget https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar
-```
-
-## Шаг 3: Проверка работы Gradle
-
-```bash
-./gradlew tasks
-```
-
-## Шаг 4: Генерация Protobuf классов
-
-```bash
-./gradlew generateProto
-```
-Ожидаемый результат:
-```
-BUILD SUCCESSFUL in Xs
-```
-Проверьте генерацию:
-```bash 
-ls -la build/generated/source/proto/main/java/com/example/messagemod/network/proto/
-```
-## Шаг 5: Настройка IDE (IntelliJ IDEA)
-
-1. Откройте проект как Gradle проект
-2. Подождите пока IDEA загрузит зависимости
-3. Пометьте сгенерированные файлы как Source Root:
-
-   - Правый клик на `build/generated/source/proto/main/java`
-   - `Mark Directory as → Sources Root`
-
-4. Invalidate Caches:
-
-   - `File → Invalidate Caches → Invalidate and Restart`
-
-## Шаг 6: Сборка проекта
-
-```bash
-./gradlew build
-```
-Если возникают ошибки:
-### Ошибка: "Cannot resolve symbol MessageProto"
-```bash
-./gradlew clean
-./gradlew generateProto
-./gradlew build
-```
-Затем в IDEA: `File → Invalidate Caches → Restart`
-
-### Ошибка: "Task :generateProto FAILED"
-
-Проверьте:
-
-1. Существует ли файл src/main/proto/message.proto?
-2. Правильный ли синтаксис в .proto файле?
-
-```bash
-cat src/main/proto/message.proto
-```
-Должно быть:
-```protobuf
-syntax = "proto3";
-
-option java_package = "com.example.messagemod.network.proto";
-option java_outer_classname = "MessageProto";
-
-message Message {
-string text = 1;
-}
-```
-
-### Ошибка с Fabric Loom
-Если `fabric-loom 1.12-SNAPSHOT` не работает, измените в `gradle.properties`:
-
-```gradle
-loom_version=1.11-SNAPSHOT
-```
-Или используйте стабильную версию:
-
-```gradle
-loom_version=1.10.+
-```
-
-### Шаг 7: Настройка PostgreSQL
-
-#### 1. Запустите PostgreSQL
-
-```bash
-docker-compose up -d
-```
-
-#### 2. Проверьте что работает
-
-```bash
-docker ps
-```
-
-Должно быть:
-
-```docker
-CONTAINER ID   IMAGE                PORTS                    NAMES
-xxxxx          postgres:15-alpine   0.0.0.0:5432->5432/tcp   minecraft-postgres
-```
-
-#### 3. Запустите сервер
-
-```bash
-# Сначала примите EULA
-# Откройте run/eula.txt и измените eula=false на eula=true
-
 ./gradlew runServer
 ```
 
-#### 4. Запустите клиент (в другом терминале)
+Then, in another terminal, start the client:
 
 ```bash
 ./gradlew runClient
 ```
-Minecraft запустится в dev-режиме с модом.
 
-#### 6. Тестируйте!
+## How to use it
 
-1. В игре нажмите M
-2. Введите сообщение
-3. Нажмите Send
+Once the game starts:
 
-#### 7. Проверьте базу данных
+1. Press `M`
+2. Type your message
+3. Click `Send`
+
+Your message is stored in PostgreSQL.
+
+## View saved messages
+
 ```bash
 docker exec -it minecraft-postgres psql -U mcuser -d minecraft -c "SELECT * FROM messages;"
 ```
-   Вы должны увидеть ваше сообщение! 🎉
 
-Команды на каждый день:
+## Useful commands
+
 ```bash
-# Запустить PostgreSQL
-docker-compose up -d
+# Start PostgreSQL
+docker compose up -d
 
-# Остановить PostgreSQL
-docker-compose down
+# Stop PostgreSQL
+docker compose down
 
-# Посмотреть данные
+# View messages
 docker exec -it minecraft-postgres psql -U mcuser -d minecraft -c "SELECT * FROM messages;"
-
-# Очистить таблицу
-docker exec -it minecraft-postgres psql -U mcuser -d minecraft -c "TRUNCATE TABLE messages;"
 ```
 
-Готово! 🚀
+## Troubleshooting
 
-PostgreSQL работает в Docker, сервер Minecraft подключён к базе данных, и вы можете отправлять сообщения через GUI!
+### Missing DB config
+
+If you see:
+
+```text
+Missing required config: DB_URL
+```
+
+make sure `.env` exists in the project root and contains your own local values.
+
+### Docker is not running
+
+Start Docker Desktop or the Docker daemon, then run:
+
+```bash
+docker compose up -d
+```
+
+### The server does not start
+
+Make sure `run/eula.txt` is set to `eula=true`.
+
+## Notes
+
+This project is meant for local use and testing only.
+
+For normal use, you do not need to manually generate classes, initialize Gradle wrapper files, or change IDE settings.
+
+Do not commit real database credentials. Keep them local only.
