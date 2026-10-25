@@ -1,4 +1,4 @@
-﻿# 🚀 Message Mod
+# 🚀 Message Mod
 
 Message Mod is a Fabric mod for Minecraft that lets players send messages to a PostgreSQL database.
 
